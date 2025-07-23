@@ -9,7 +9,32 @@ class User(db.Model):
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
+    posts = db.relationship('Post', backref='author')
+    comments = db.relationship('Comment', backref='author', lazy=True)
+    followers = db.relationship('Follower', foreign_keys='Follower.user_to_id', backref='followed_user', lazy=True)
+    following = db.relationship('Follower', foreign_keys='Follower.user_from_id', backref='follower_user', lazy=True)
 
+class Follower(db.Model):
+    user_from_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), primary_key=True)
+    user_to_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), primary_key=True)
+
+class Post(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), nullable=False)
+    comments = db.relationship('Comment', backref='post', lazy=True)
+    media = db.relationship('Media', backref='post', lazy=True)
+
+class Comment(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    comment_text: Mapped[str] = mapped_column(String(300), nullable=False)
+    author_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), nullable=False)
+    post_id: Mapped[int] = mapped_column(db.ForeignKey('post.id'), nullable=False)
+    
+class Media(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True)
+    type: Mapped[enumerate] = mapped_column(String(50), nullable=False)
+    url: Mapped[str] = mapped_column(String(255), nullable=False)
+    post_id: Mapped[int] = mapped_column(db.ForeignKey('post.id'), nullable=False)
 
     def serialize(self):
         return {

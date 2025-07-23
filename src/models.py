@@ -6,17 +6,19 @@ db = SQLAlchemy()
 
 class User(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(80), unique=True, nullable=False)
+    firstname: Mapped[str] = mapped_column(String(80), nullable=False)
+    lastname: Mapped[str] = mapped_column(String(80), nullable=False)
     email: Mapped[str] = mapped_column(String(120), unique=True, nullable=False)
-    password: Mapped[str] = mapped_column(nullable=False)
-    is_active: Mapped[bool] = mapped_column(Boolean(), nullable=False)
-    posts = db.relationship('Post', backref='author')
-    comments = db.relationship('Comment', backref='author', lazy=True)
-    followers = db.relationship('Follower', foreign_keys='Follower.user_to_id', backref='followed_user', lazy=True)
-    following = db.relationship('Follower', foreign_keys='Follower.user_from_id', backref='follower_user', lazy=True)
+    posts: Mapped[list["Post"]] = db.relationship('Post', backref='author')
+    comments: Mapped[list["Comment"]] = db.relationship('Comment', backref='author', lazy=True)
+    followers: Mapped[list["Follower"]] = db.relationship('Follower', foreign_keys='Follower.user_to_id', backref='followed_user', lazy=True)
+    following: Mapped[list["Follower"]] = db.relationship('Follower', foreign_keys='Follower.user_from_id', backref='follower_user', lazy=True)
 
 class Follower(db.Model):
-    user_from_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), primary_key=True)
-    user_to_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), primary_key=True)
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_from_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), nullable=False)
+    user_to_id: Mapped[int] = mapped_column(db.ForeignKey('user.id'), nullable=False)
 
 class Post(db.Model):
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -40,5 +42,6 @@ class Media(db.Model):
         return {
             "id": self.id,
             "email": self.email,
+            
             # do not serialize the password, its a security breach
         }
